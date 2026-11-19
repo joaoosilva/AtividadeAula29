@@ -1,0 +1,1528 @@
+<html lang="pt-BR"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratório Interativo • Aula 29 | Padrão DAO &amp; Mapeamento Objeto-Relacional</title>
+    <!-- Prism.js para Realce Sintático Elegante de Java -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --secondary: #0f766e;
+            --secondary-light: #14b8a6;
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --accent: #b45309;
+            --success: #15803d;
+            --danger: #b91c1c;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 24px 16px 80px 16px;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        header.page-header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            color: white;
+            padding: 32px 28px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+
+        .badge-institution {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        header h1 {
+            font-size: 1.85rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        header p.subtitle {
+            font-size: 0.95rem;
+            color: #cbd5e1;
+            margin-bottom: 16px;
+        }
+
+        .header-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            padding-top: 14px;
+        }
+
+        .meta-item strong {
+            color: #93c5fd;
+        }
+
+        /* Barra de Progresso Gamificada */
+        .progress-bar-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .progress-track {
+            flex: 1;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--secondary) 0%, var(--success) 100%);
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--primary);
+            min-width: 140px;
+            text-align: right;
+        }
+
+        /* Cards Teóricos */
+        .theory-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-left: 5px solid var(--primary-light);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .theory-card h2 {
+            color: var(--primary);
+            font-size: 1.25rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .analogy-box {
+            background: #eff6ff;
+            border: 1px dashed #93c5fd;
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin: 14px 0;
+            font-size: 0.92rem;
+            color: #1e3a8a;
+        }
+
+        .history-tag {
+            display: inline-block;
+            background: #e0f2fe;
+            color: #0369a1;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        /* Questões */
+        .question-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            transition: all 0.2s ease;
+        }
+
+        .question-card.answered-correct {
+            border-color: #86efac;
+            background: #f0fdf4;
+        }
+
+        .question-card.answered-incorrect {
+            border-color: #fca5a5;
+            background: #fef2f2;
+        }
+
+        /* Etiqueta IMPORTANTE solicitada */
+        .badge-importante {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #f87171;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            padding: 4px 10px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .question-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            color: #0f172a;
+        }
+
+        .options-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            background: #ffffff;
+            transition: all 0.15s ease;
+        }
+
+        .option-item:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .option-item input[type="radio"] {
+            margin-top: 4px;
+            cursor: pointer;
+        }
+
+        .option-label {
+            font-size: 0.92rem;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .feedback-box {
+            margin-top: 14px;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 0.88rem;
+            display: none;
+        }
+
+        .feedback-box.correct {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+            display: block;
+        }
+
+        .feedback-box.incorrect {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+            display: block;
+        }
+
+        /* Editor Interativo de Código */
+        .editor-container {
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 14px;
+            border: 1px solid #334155;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            color: #94a3b8;
+            font-size: 0.8rem;
+            font-family: monospace;
+        }
+
+        .code-input {
+            width: 100%;
+            height: 175px;
+            background: #020617;
+            color: #f1f5f9;
+            font-family: "Fira Code", "Courier New", Courier, monospace;
+            font-size: 0.9rem;
+            padding: 12px;
+            border: 1px solid #1e293b;
+            border-radius: 6px;
+            resize: vertical;
+            outline: none;
+            line-height: 1.5;
+        }
+
+        .code-input:focus {
+            border-color: var(--primary-light);
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-test {
+            background: var(--primary-light);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .btn-test:hover {
+            background: var(--primary);
+        }
+
+        .btn-reset {
+            background: #334155;
+            color: #cbd5e1;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .code-feedback {
+            margin-top: 10px;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            display: none;
+        }
+
+        .code-feedback.success {
+            background: #064e3b;
+            color: #6ee7b7;
+            border: 1px solid #059669;
+            display: block;
+        }
+
+        .code-feedback.error {
+            background: #450a0a;
+            color: #fca5a5;
+            border: 1px solid #dc2626;
+            display: block;
+        }
+
+        /* Seção da Lista Oficial Desbloqueada */
+        #official-task-section {
+            display: none;
+            margin-top: 36px;
+            background: #ffffff;
+            border: 2px solid var(--secondary);
+            border-radius: var(--radius);
+            padding: 32px 28px;
+            box-shadow: 0 10px 25px -5px rgba(15, 118, 110, 0.15);
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .task-badge-unlocked {
+            background: #ccfbf1;
+            color: #0f766e;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        /* Cofre Criptográfico */
+        .vault-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            border-radius: var(--radius);
+            padding: 28px;
+            margin-top: 30px;
+            border: 1px solid #334155;
+        }
+
+        .vault-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .vault-icon {
+            font-size: 2.2rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 50%;
+        }
+
+        .vault-title h3 {
+            font-size: 1.3rem;
+            color: #f8fafc;
+        }
+
+        .vault-title p {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        .clue-badge {
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            margin-bottom: 18px;
+        }
+
+        .unlock-form {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .unlock-input {
+            flex: 1;
+            padding: 12px 16px;
+            background: #020617;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            font-family: monospace;
+            outline: none;
+        }
+
+        .unlock-input:focus {
+            border-color: #38bdf8;
+        }
+
+        .unlock-btn {
+            background: #0284c7;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .unlock-btn:hover {
+            background: #0369a1;
+        }
+
+        .vault-msg {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .vault-msg.success {
+            background: rgba(22, 163, 74, 0.2);
+            border: 1px solid #22c55e;
+            color: #86efac;
+            display: block;
+        }
+
+        .vault-msg.error {
+            background: rgba(220, 38, 38, 0.2);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+            display: block;
+        }
+
+        #decrypted-container {
+            display: none;
+            margin-top: 24px;
+            background: #ffffff;
+            color: #1e293b;
+            padding: 28px;
+            border-radius: 8px;
+            font-size: 0.92rem;
+            line-height: 1.7;
+            border: 1px solid #e2e8f0;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <header class="page-header">
+        <div class="badge-institution">UniCesumar • Engenharia de Software &amp; ADS</div>
+        <h1>Laboratório Interativo • Aula 29</h1>
+        <p class="subtitle">Padrão DAO (Data Access Object), Inversão de Dependência e Mapeamento Objeto-Relacional</p>
+        <div class="header-meta">
+            <div class="meta-item">Docente: <strong>Prof. Me. Júlio B. Herculani</strong></div>
+            <div class="meta-item">Ambiente: <strong>Offline / Standalone</strong></div>
+            <div class="meta-item">Modo: <strong>Autoaprendizagem Prática Ativa</strong></div>
+            <div class="meta-item">Foco P2: <strong>Arquitetura em Camadas &amp; Contratos DAO</strong></div>
+        </div>
+    </header>
+
+    <!-- Barra de Progresso -->
+    <div class="progress-bar-container">
+        <span style="font-size:0.9rem; font-weight:600; color:#334155;">Progresso para Desbloquear a Lista:</span>
+        <div class="progress-track">
+            <div class="progress-fill" id="progress-fill" style="width: 100%;"></div>
+        </div>
+        <div class="progress-text" id="progress-text">7 de 7 Concluídos (100%)</div>
+    </div>
+
+    <!-- MÓDULO TEÓRICO 1: O PROBLEMA HISTÓRICO -->
+    <div class="theory-card">
+        <div class="history-tag">Fundamentação Histórica • 1970 vs 1990</div>
+        <h2>🏛️ 1. O Abismo entre Dois Mundos (O Impedance Mismatch)</h2>
+        <p>No início da computação corporativa, <strong>Edgar F. Codd (IBM, 1970)</strong> formalizou o Modelo Relacional. O banco de dados pensa exclusivamente em tabelas bidimensionais, tuplas de dados primitivos escalares e integridade relacional via chaves primárias (PK).</p>
+        <p style="margin-top:8px;">Já a Orientação a Objetos de <strong>Alan Kay</strong> pensa em entidades vivas na memória RAM: encapsulamento, comportamentos (métodos), herança polimórfica e ponteiros de referência (identidade de Heap via <code>obj1 == obj2</code>). Ted Neward denominou essa barreira de <em>"O Vietnã da Computação"</em>.</p>
+        
+        <div class="analogy-box">
+            <strong>🎭 Metáfora Lúdica do Tradutor Juramentado:</strong><br>
+            A classe de negócio em Java é um diplomata que só fala português culto (regras de validação). O banco de dados é um diplomata que só fala dialeto SQL antigo. O <strong>Padrão DAO</strong> é o tradutor juramentado no meio da mesa: ele recebe comandos do Java e gera SQL seguro; quando o banco entrega uma pasta com fichas soltas (<code>ResultSet</code>), o DAO hidrata e monta o objeto Java na memória.
+        </div>
+    </div>
+
+    <!-- QUESTÃO 1 (MÚLTIPLA ESCOLHA) -->
+    <div class="question-card answered-correct" id="card-q1">
+        <span class="badge-importante">⚠️ IMPORTANTE • CONCEITO P2</span>
+        <h3>Questão 1: A Natureza do Descompasso Objeto-Relacional</h3>
+        <p style="font-size:0.95rem; color:#334155;">
+            Em sistemas corporativos em Java, desenvolvedores frequentemente enfrentam o problema conhecido como <em>Impedance Mismatch</em>. Assinale a afirmativa que define corretamente a raiz desse descompasso arquitetural:
+        </p>
+        <ul class="options-list">
+            <li class="option-item" onclick="selectRadio('q1', 'q1_a')">
+                <input type="radio" name="q1" id="q1_a">
+                <label class="option-label" for="q1_a"><strong>(A)</strong> Decorre da lentidão dos discos rígidos em ler conexões via porta TCP do JDBC.</label>
+            </li>
+            <li class="option-item" onclick="selectRadio('q1', 'q1_b')">
+                <input type="radio" name="q1" id="q1_b" checked="">
+                <label class="option-label" for="q1_b"><strong>(B)</strong> Resulta da assimetria entre grafos de objetos ricos na RAM (comportamento e encapsulamento) e tabelas relacionais de dados atômicos no disco (tuplas e chaves primárias).</label>
+            </li>
+            <li class="option-item" onclick="selectRadio('q1', 'q1_c')">
+                <input type="radio" name="q1" id="q1_c">
+                <label class="option-label" for="q1_c"><strong>(C)</strong> Ocorre quando o driver SQLite não consegue interpretar a instrução <code>AUTOINCREMENT</code> da tabela.</label>
+            </li>
+            <li class="option-item" onclick="selectRadio('q1', 'q1_d')">
+                <input type="radio" name="q1" id="q1_d">
+                <label class="option-label" for="q1_d"><strong>(D)</strong> Refere-se à obrigatoriedade de usar exclusivamente coleções do tipo <code>Vector</code> em vez de <code>List</code>.</label>
+            </li>
+        </ul>
+        <div class="feedback-box correct" id="fb-q1" style="display: block;">✔️ <strong>Resposta Exata!</strong> Você demonstrou compreensão do princípio arquitetural avaliado.</div>
+    </div>
+
+    <!-- MÓDULO TEÓRICO 2: O ANTI-PATTERN DE INFRAESTRUTURA NO DOMÍNIO -->
+    <div class="theory-card">
+        <div class="history-tag">Catálogo Core J2EE • Sun Microsystems (2001)</div>
+        <h2>🚫 2. O Pecado Original: Misturar Regra de Negócio com SQL</h2>
+        <p>Em 2001, a Sun Microsystems publicou o catálogo <em>Core J2EE Patterns</em>. O erro mais amador de um programador é colocar comandos JDBC (<code>Connection</code>, <code>PreparedStatement</code>) dentro das entidades de domínio ou nos botões de telas Swing.</p>
+        <p style="margin-top:8px;">Se você coloca um <code>INSERT</code> dentro de <code>Produto.java</code>, a classe ganha duas razões para mudar (violando o <strong>SRP - Single Responsibility Principle</strong>): muda se as regras financeiras mudarem e muda se a empresa trocar o SQLite pelo PostgreSQL!</p>
+        
+        <div class="analogy-box">
+            <strong>🎮 Metáfora do Controle Remoto Universal (Interfaces):</strong><br>
+            A <strong>Interface DAO</strong> funciona exatamente como o controle remoto da sua sala: tem botões bem definidos como <code>salvar(Cliente)</code> e <code>buscarPorId(Long)</code>. O seu Controller aperta esses botões sem precisar saber se a TV é Samsung, LG ou Philips (SQLite, PostgreSQL ou Mock em memória).
+        </div>
+    </div>
+
+    <!-- QUESTÃO 2 (MÚLTIPLA ESCOLHA) -->
+    <div class="question-card answered-correct" id="card-q2">
+        <span class="badge-importante">⚠️ IMPORTANTE • ANTI-PATTERN P2</span>
+        <h3>Questão 2: Violação do Princípio da Responsabilidade Única (SRP)</h3>
+        <p style="font-size:0.95rem; color:#334155;">
+            Analise o trecho de código abaixo retirado de uma aplicação iniciante:
+        </p>
+        <pre class="language-java" tabindex="0"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Produto</span> <span class="token punctuation">{</span>
+    <span class="token keyword">private</span> <span class="token class-name">String</span> nome<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">double</span> preco<span class="token punctuation">;</span>
+    
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">aplicarDesconto</span><span class="token punctuation">(</span><span class="token keyword">double</span> perc<span class="token punctuation">)</span> <span class="token punctuation">{</span> 
+        <span class="token keyword">this</span><span class="token punctuation">.</span>preco <span class="token operator">-=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>preco <span class="token operator">*</span> perc<span class="token punctuation">;</span> 
+    <span class="token punctuation">}</span>
+    
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">persistirNoBanco</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token comment">// VIOLAÇÃO GRAVE!</span>
+        <span class="token class-name">Connection</span> conn <span class="token operator">=</span> <span class="token class-name">DriverManager</span><span class="token punctuation">.</span><span class="token function">getConnection</span><span class="token punctuation">(</span><span class="token string">"jdbc:sqlite:loja.db"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">PreparedStatement</span> ps <span class="token operator">=</span> conn<span class="token punctuation">.</span><span class="token function">prepareStatement</span><span class="token punctuation">(</span><span class="token string">"INSERT INTO produtos VALUES (?, ?)"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment">// ...</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+        <p style="font-size:0.92rem; color:#334155; margin-top:10px;">Sob a ótica de Clean Code e Arquitetura em Camadas, por que essa estrutura é reprovada na Engenharia de Software?</p>
+        <ul class="options-list">
+            <li class="option-item" onclick="selectRadio('q2', 'q2_a')">
+                <input type="radio" name="q2" id="q2_a">
+                <label class="option-label" for="q2_a"><strong>(A)</strong> Porque a classe deveria ter herdado de <code>Thread</code> para executar o INSERT em segundo plano.</label>
+            </li>
+            <li class="option-item" onclick="selectRadio('q2', 'q2_b')">
+                <input type="radio" name="q2" id="q2_b">
+                <label class="option-label" for="q2_b"><strong>(B)</strong> Porque o método <code>aplicarDesconto</code> deveria obrigatoriamente estar dentro do banco de dados como uma Trigger.</label>
+            </li>
+            <li class="option-item" onclick="selectRadio('q2', 'q2_c')">
+                <input type="radio" name="q2" id="q2_c" checked="">
+                <label class="option-label" for="q2_c"><strong>(C)</strong> Porque acopla o Domínio de Negócio diretamente a detalhes de infraestrutura (JDBC), ferindo o SRP e impedindo testes unitários herméticos sem banco ativo.</label>
+            </li>
+            <li class="option-item" onclick="selectRadio('q2', 'q2_d')">
+                <input type="radio" name="q2" id="q2_d">
+                <label class="option-label" for="q2_d"><strong>(D)</strong> Porque o Java proíbe a instanciação de <code>DriverManager</code> dentro de métodos com modificador <code>public</code>.</label>
+            </li>
+        </ul>
+        <div class="feedback-box correct" id="fb-q2" style="display: block;">✔️ <strong>Resposta Exata!</strong> Você demonstrou compreensão do princípio arquitetural avaliado.</div>
+    </div>
+
+    <!-- QUESTÃO 3 (MÚLTIPLA ESCOLHA - INTERFACES & DIP) -->
+    <div class="question-card answered-correct" id="card-q3">
+        <span class="badge-importante">⚠️ IMPORTANTE • CONTRATO P2</span>
+        <h3>Questão 3: Inversão de Dependência (DIP - SOLID) com Interfaces DAO</h3>
+        <p style="font-size:0.95rem; color:#334155;">
+            Em um projeto profissional orientado a objetos, a camada de Controller declara sua dependência da seguinte forma:
+        </p>
+        <pre class="language-java" tabindex="0"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">LivroController</span> <span class="token punctuation">{</span>
+    <span class="token comment">// Declara a dependência pela INTERFACE PURA (DIP):</span>
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">LivroDAO</span> dao<span class="token punctuation">;</span>
+    
+    <span class="token keyword">public</span> <span class="token class-name">LivroController</span><span class="token punctuation">(</span><span class="token class-name">LivroDAO</span> dao<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>dao <span class="token operator">=</span> dao<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+        <p style="font-size:0.92rem; color:#334155; margin-top:10px;">Qual o ganho arquitetural obtido com essa injeção de dependência baseada em contrato?</p>
+        <ul class="options-list">
+            <li class="option-item" onclick="selectRadio('q3', 'q3_a')">
+                <input type="radio" name="q3" id="q3_a" checked="">
+                <label class="option-label" for="q3_a"><strong>(A)</strong> Desacoplamento total: a camada de controle opera sobre o contrato, permitindo alternar entre SQLite, PostgreSQL ou um Mock em memória sem alterar nenhuma linha da regra de negócio.</label>
+            </li>
+            <li class="option-item" onclick="selectRadio('q3', 'q3_b')">
+                <input type="radio" name="q3" id="q3_b">
+                <label class="option-label" for="q3_b"><strong>(B)</strong> Aumento de velocidade de conexão através do cache automático embutido na palavra-chave <code>interface</code>.</label>
+            </li>
+            <li class="option-item" onclick="selectRadio('q3', 'q3_c')">
+                <input type="radio" name="q3" id="q3_c">
+                <label class="option-label" for="q3_c"><strong>(C)</strong> O Java compila a interface diretamente para código assembly do processador.</label>
+            </li>
+            <li class="option-item" onclick="selectRadio('q3', 'q3_d')">
+                <input type="radio" name="q3" id="q3_d">
+                <label class="option-label" for="q3_d"><strong>(D)</strong> A dispensa automática do comando <code>commit()</code> em bancos relacionais.</label>
+            </li>
+        </ul>
+        <div class="feedback-box correct" id="fb-q3" style="display: block;">✔️ <strong>Resposta Exata!</strong> Você demonstrou compreensão do princípio arquitetural avaliado.</div>
+    </div>
+
+    <!-- QUESTÃO 4 (MÚLTIPLA ESCOLHA - OPTIONAL) -->
+    <div class="question-card answered-correct" id="card-q4">
+        <span class="badge-importante">⚠️ IMPORTANTE • OPTIONAL P2</span>
+        <h3>Questão 4: A Erradicação do NullPointerException com Java 8+ Optional</h3>
+        <p style="font-size:0.95rem; color:#334155;">
+            Ao consultar um registro pelo ID no banco de dados (ex.: <code>buscarPorId(999L)</code>) e o registro não existir na tabela, qual a razão técnica para a assinatura do método retornar <code>Optional&lt;Livro&gt;</code> em vez de simplesmente <code>Livro</code> (com valor <code>null</code>)?
+        </p>
+        <ul class="options-list">
+            <li class="option-item" onclick="selectRadio('q4', 'q4_a')">
+                <input type="radio" name="q4" id="q4_a">
+                <label class="option-label" for="q4_a"><strong>(A)</strong> O tipo <code>Optional</code> ocupa menos bytes na memória Heap do que a referência <code>null</code>.</label>
+            </li>
+            <li class="option-item" onclick="selectRadio('q4', 'q4_b')">
+                <input type="radio" name="q4" id="q4_b">
+                <label class="option-label" for="q4_b"><strong>(B)</strong> O SQLite rejeita comandos SELECT cujo retorno resulte no ponteiro <code>null</code> da JVM.</label>
+            </li>
+            <li class="option-item" onclick="selectRadio('q4', 'q4_c')">
+                <input type="radio" name="q4" id="q4_c">
+                <label class="option-label" for="q4_c"><strong>(C)</strong> Retornar <code>null</code> obriga a classe DAO a ser declarada como <code>abstract</code>.</label>
+            </li>
+            <li class="option-item" onclick="selectRadio('q4', 'q4_d')">
+                <input type="radio" name="q4" id="q4_d" checked="">
+                <label class="option-label" for="q4_d"><strong>(D)</strong> O <code>Optional</code> explicita semanticamente que o resultado pode estar ausente, obrigando o cliente chamador a tratar a presença/ausência de forma segura e erradicando o <code>NullPointerException</code> acidental.</label>
+            </li>
+        </ul>
+        <div class="feedback-box correct" id="fb-q4" style="display: block;">✔️ <strong>Resposta Exata!</strong> Você demonstrou compreensão do princípio arquitetural avaliado.</div>
+    </div>
+
+    <!-- MÓDULO PRÁTICO: EDITORES INTERATIVOS DE CÓDIGO (VALORES DE BANCADA) -->
+    <div class="theory-card" style="border-left-color: var(--secondary);">
+        <div class="history-tag" style="background:#ccfbf1; color:#0f766e;">Prática Interativa de Bancada</div>
+        <h2>💻 3. Laboratório StarLog BookStore • Desafios de Código</h2>
+        <p>Abaixo você irá implementar os três métodos essenciais da classe <code>LivroDAOSqlite</code>. O avaliador automático do laboratório verificará em tempo real a integridade da sua sintaxe, o uso de boas práticas do JDBC e a ausência de vulnerabilidades de segurança!</p>
+    </div>
+
+    <!-- DESAFIO DE CÓDIGO 1: mapearLinha -->
+    <div class="question-card answered-correct" id="card-code1">
+        <span class="badge-importante">⚠️ IMPORTANTE • MAPEAMENTO P2</span>
+        <h3>Desafio de Código 1: O Método Centralizador <code>mapearLinha(ResultSet rs)</code></h3>
+        <p style="font-size:0.92rem; color:#334155;">
+            Implemente o método auxiliar privado que recebe a linha atual do <code>ResultSet</code> e transforma nos 4 atributos do <code>new Livro(id, titulo, autor, preco)</code>:
+        </p>
+        
+        <div class="editor-container">
+            <div class="editor-header">
+                <span>LivroDAOSqlite.java • Editor Interativo</span>
+                <span>Java 17+</span>
+            </div>
+            <textarea class="code-input" id="code-mapear" spellcheck="false">private Livro mapearLinha(ResultSet rs) throws SQLException {
+    Long id = rs.getLong("id");
+    String titulo = rs.getString("titulo");
+    String autor = rs.getString("autor");
+    double preco = rs.getDouble("preco");
+
+    return new Livro(id, titulo, autor, preco);
+}</textarea>
+            <div class="editor-actions">
+                <button class="btn-test" onclick="validarMapearLinha()">⚡ Validar Implementação</button>
+                <button class="btn-reset" onclick="resetCode1()">Restaurar Código Base</button>
+            </div>
+            <div class="code-feedback success" id="feedback-code1" style="display: block;">✔️ <strong>Implementação Perfeita!</strong> O mapeador extrai as colunas com tipagem estrita e devolve a entidade completa via construtor.</div>
+        </div>
+    </div>
+
+    <!-- DESAFIO DE CÓDIGO 2: salvar com chaves geradas -->
+    <div class="question-card answered-correct" id="card-code2">
+        <span class="badge-importante">⚠️ IMPORTANTE • INSERT/ID P2</span>
+        <h3>Desafio de Código 2: O Método <code>salvar(Livro livro)</code> com Resgate do ID</h3>
+        <p style="font-size:0.92rem; color:#334155;">
+            Implemente a operação de inserção utilizando <code>PreparedStatement</code> seguro com parâmetros <code>?</code> e a captura de chave gerada via <code>Statement.RETURN_GENERATED_KEYS</code>:
+        </p>
+        
+        <div class="editor-container">
+            <div class="editor-header">
+                <span>LivroDAOSqlite.java • Create com Chave Primária</span>
+                <span>Java 17+</span>
+            </div>
+            <textarea class="code-input" id="code-salvar" style="height:210px;" spellcheck="false">public void salvar(Livro livro) throws SQLException {
+    String sql = "INSERT INTO livros (titulo, autor, preco) VALUES (?, ?, ?)";
+
+    try (Connection conn = Conexao.conectar();
+         PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+        stmt.setString(1, livro.getTitulo());
+        stmt.setString(2, livro.getAutor());
+        stmt.setDouble(3, livro.getPreco());
+
+        stmt.executeUpdate();
+
+        ResultSet rs = stmt.getGeneratedKeys();
+
+        if (rs.next()) {
+            livro.setId(rs.getLong(1));
+        }
+    }
+}</textarea>
+            <div class="editor-actions">
+                <button class="btn-test" onclick="validarSalvar()">⚡ Validar Implementação</button>
+                <button class="btn-reset" onclick="resetCode2()">Restaurar Código Base</button>
+            </div>
+            <div class="code-feedback success" id="feedback-code2" style="display: block;">✔️ <strong>Código Canônico e Seguro!</strong> PreparedStatement tipado sem risco de SQL Injection e ID gerado sincronizado no objeto da memória.</div>
+        </div>
+    </div>
+
+    <!-- DESAFIO DE CÓDIGO 3: buscarPorId com Optional -->
+    <div class="question-card answered-correct" id="card-code3">
+        <span class="badge-importante">⚠️ IMPORTANTE • BUSCA/OPTIONAL P2</span>
+        <h3>Desafio de Código 3: O Método <code>buscarPorId(Long id)</code> com <code>Optional</code></h3>
+        <p style="font-size:0.92rem; color:#334155;">
+            Implemente a consulta pontual por ID reaproveitando o método <code>mapearLinha(rs)</code> e encapsulando o resultado em <code>Optional.of(...)</code> ou <code>Optional.empty()</code>:
+        </p>
+        
+        <div class="editor-container">
+            <div class="editor-header">
+                <span>LivroDAOSqlite.java • Read Pontual Seguro</span>
+                <span>Java 17+</span>
+            </div>
+            <textarea class="code-input" id="code-buscar" style="height:200px;" spellcheck="false">public Optional&lt;Livro&gt; buscarPorId(Long id) throws SQLException {
+    String sql = "SELECT * FROM livros WHERE id = ?";
+
+    try (Connection conn = Conexao.conectar();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
+
+        ps.setLong(1, id);
+
+        ResultSet rs = ps.executeQuery();
+
+        if (rs.next()) {
+            return Optional.of(mapearLinha(rs));
+        }
+
+        return Optional.empty();
+    }
+}</textarea>
+            <div class="editor-actions">
+                <button class="btn-test" onclick="validarBuscar()">⚡ Validar Implementação</button>
+                <button class="btn-reset" onclick="resetCode3()">Restaurar Código Base</button>
+            </div>
+            <div class="code-feedback success" id="feedback-code3" style="display: block;">✔️ <strong>Padrão de Ouro Aprovado!</strong> Reutilização elegante do método mapearLinha e tratamento blindado contra NullPointerException com Optional.</div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO DA LISTA OFICIAL (DESBLOQUEADA APÓS 7 ACERTOS) -->
+    <div id="official-task-section" style="display: block;">
+        <span class="task-badge-unlocked">🔓 LISTA OFICIAL DESBLOQUEADA COM SUCESSO!</span>
+        <h2 style="color:var(--primary); font-size:1.5rem; margin-bottom:8px;">Missão Oficial Prática: Catálogo BookStore Enterprise</h2>
+        <p style="font-size:0.95rem; color:#334155;">
+            Você completou a etapa diagnóstica e destravou a Lista Oficial de Desenvolvimento! Agora abra sua IDE (VS Code / IntelliJ / Eclipse) e implemente o sistema de ponta a ponta:
+        </p>
+
+        <div style="background:#f8fafc; border-radius:10px; padding:24px; margin:24px 0; border:1px solid #cbd5e1; border-left:6px solid var(--primary); box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid #e2e8f0; padding-bottom:10px;">
+                <h3 style="color:#0f172a; margin:0; font-size:1.15rem;">📐 Arquitetura &amp; Especificação Detalhada do Projeto</h3>
+                <span style="font-size:0.75rem; background:#0284c7; color:white; padding:3px 8px; border-radius:4px; font-weight:600;">PADRÃO ENTERPRISE</span>
+            </div>
+
+            <p style="font-size:0.92rem; color:#475569; margin-bottom:16px;">
+                Implemente o projeto modular seguindo rigorosamente a separação de responsabilidades (Clean Architecture / MVC):
+            </p>
+
+            <!-- Grid de Requisitos -->
+            <div style="display:grid; grid-template-columns:1fr; gap:16px; margin-bottom:20px;">
+                
+                <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:16px;">
+                    <h4 style="color:#0284c7; margin-bottom:8px; font-size:0.95rem;">1. Pacote e Modelo: <code>br.com.bookstore.model.Livro</code></h4>
+                    <ul style="font-size:0.88rem; color:#334155; line-height:1.6; margin-left:18px;">
+                        <li><strong>Atributos Privados:</strong> <code>Long id</code>, <code>String titulo</code>, <code>String autor</code>, <code>double preco</code>.</li>
+                        <li><strong>Dois Construtores:</strong> 
+                            <br>• Construtor Completo: <code>(Long id, String titulo, String autor, double preco)</code> — usado para hidratar tuplas do banco.
+                            <br>• Construtor de Negócio: <code>(String titulo, String autor, double preco)</code> — atribui <code>null</code> ao <code>id</code>.
+                        </li>
+                        <li><strong>Blindagem de Invariantes de Domínio:</strong> O construtor DEVE validar e disparar <code>IllegalArgumentException</code> caso:
+                            <br>• <code>titulo</code> seja nulo ou vazio (comprimento &lt; 2 caracteres após <code>trim()</code>).
+                            <br>• <code>autor</code> seja nulo ou vazio.
+                            <br>• <code>preco</code> seja menor ou igual a <code>0.0</code> ("O preço de venda deve ser estritamente positivo").
+                        </li>
+                        <li><strong>Métodos:</strong> Getters completos, <code>setId(Long id)</code> (único setter permitido para sincronizar PK gerada) e <code>toString()</code> formatado.</li>
+                    </ul>
+                </div>
+
+                <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:16px;">
+                    <h4 style="color:#0284c7; margin-bottom:8px; font-size:0.95rem;">2. Contrato da Interface: <code>br.com.bookstore.dao.LivroDAO</code></h4>
+                    <p style="font-size:0.88rem; color:#475569; margin-bottom:6px;">A camada de negócio não pode conhecer JDBC. Declare o contrato desacoplado:</p>
+                    <pre style="background:#0f172a; color:#f8fafc; padding:10px 14px; border-radius:6px; font-size:0.82rem; overflow-x:auto;"><code>public interface LivroDAO {
+    void salvar(Livro livro);
+    Optional&lt;Livro&gt; buscarPorId(Long id);
+    List&lt;Livro&gt; listarTodos();
+}</code></pre>
+                </div>
+
+                <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:16px;">
+                    <h4 style="color:#0284c7; margin-bottom:8px; font-size:0.95rem;">3. Infraestrutura SQLite: <code>br.com.bookstore.dao.LivroDAOSqlite</code></h4>
+                    <ul style="font-size:0.88rem; color:#334155; line-height:1.6; margin-left:18px;">
+                        <li><strong>Inicialização Determinística:</strong> No construtor da classe DAO, execute um <code>CREATE TABLE IF NOT EXISTS livros (id INTEGER PRIMARY KEY AUTOINCREMENT, titulo TEXT NOT NULL, autor TEXT NOT NULL, preco REAL NOT NULL);</code>.</li>
+                        <li><strong>Gerenciamento de Recursos:</strong> Todo método deve usar <code>try-with-resources</code> para fechar <code>Connection</code>, <code>PreparedStatement</code> e <code>ResultSet</code> sem vazamentos.</li>
+                        <li><strong>Captura do ID Autoincrement:</strong> No <code>salvar</code>, utilize <code>Statement.RETURN_GENERATED_KEYS</code> e atribua o ID com <code>livro.setId(...)</code>.</li>
+                        <li><strong>Mapeamento Centralizado:</strong> Isole a extração das colunas em <code>private Livro mapearLinha(ResultSet rs)</code> para evitar duplicação de código.</li>
+                    </ul>
+                </div>
+
+                <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:16px;">
+                    <h4 style="color:#0284c7; margin-bottom:8px; font-size:0.95rem;">4. Roteiro Canônico de Testes no <code>Main.java</code></h4>
+                    <ol style="font-size:0.88rem; color:#334155; line-height:1.6; margin-left:18px;">
+                        <li>Instancie <code>LivroDAO dao = new LivroDAOSqlite();</code> (aplicando DIP / Inversão de Dependência).</li>
+                        <li>Persista 3 obras literárias (ex: <em>"Clean Code"</em>, <em>"Design Patterns"</em>, <em>"Refactoring"</em>) com autores e preços distintos. Verifique no console se os IDs 1, 2 e 3 foram gerados.</li>
+                        <li>Consulte o livro de ID 2. Utilize o método funcional <code>buscarPorId(2L).ifPresentOrElse(...)</code> para imprimir os dados completos ou emitir aviso amigável.</li>
+                        <li>Consulte um ID inexistente (ex: 999L) e demonstre que a aplicação não estoura <code>NullPointerException</code>.</li>
+                        <li>Chame <code>listarTodos()</code> e imprima os registros formatados com cabeçalho tabular.</li>
+                    </ol>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- COFRE CRIPTOGRÁFICO DO GABARITO OFICIAL -->
+        <div class="vault-card" id="vault-section">
+            <div class="vault-header">
+                <div class="vault-icon">🔐</div>
+                <div class="vault-title">
+                    <h3>Cofre Criptográfico: Gabarito &amp; Código Completo da Lista</h3>
+                    <p>O gabarito canônico está blindado com <strong>AES-GCM (256 bits)</strong> via WebCrypto API.</p>
+                </div>
+            </div>
+
+            <!-- Desafio de Criptoanálise / Pistas Anti-Google -->
+            <div class="clue-badge" style="background:#0f172a; border-left:4px solid #38bdf8; color:#e2e8f0; font-family:system-ui, sans-serif;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <strong style="color:#38bdf8; font-size:0.95rem;">🕵️ Protocolo CTF: Enigma Arquitetural &amp; Desafio de Força Bruta</strong>
+                    <span style="font-size:0.75rem; background:#1e293b; color:#94a3b8; border:1px solid #475569; padding:2px 8px; border-radius:12px;">Dificuldade: Média</span>
+                </div>
+                <p style="font-size:0.87rem; line-height:1.5; color:#cbd5e1; margin-bottom:10px;">
+                    Para impedir que IAs ou buscas rápidas revelem a chave, a senha é protegida por propriedades criptográficas e estruturais. Você pode descobrir por dedução conceitual ou rodar um ataque de força bruta via script no console:
+                </p>
+                
+                <div style="background:#1e293b; border-radius:6px; padding:12px; margin-bottom:10px; font-size:0.83rem; line-height:1.6; border:1px solid #334155;">
+                    <span style="color:#fbbf24; font-weight:bold;">🔍 Pistas Lógicas do Enigma:</span><br>
+                    • <strong>Tamanho:</strong> Exatamente <strong>7 caracteres</strong>, em letras minúsculas (ASCII <code>[a-z]</code>).<br>
+                    • <strong>Assinatura Criptográfica (SHA-256):</strong> O hash SHA-256 da chave termina com <code>...53a73db0d</code>.<br>
+                    • <strong>Estrutura de Caracteres:</strong> A primeira letra é uma vogal e a última letra é uma consoante líquida vibrante (<code>r</code>).
+                </div>
+
+                <div style="background:#1e293b; border-radius:6px; padding:10px; font-size:0.8rem; border-left:3px solid #10b981; color:#94a3b8;">
+                    💡 <strong>Desafio Hacker (Força Bruta no Console F12):</strong> Se você for programador raiz, abra o console do navegador e execute um script em JavaScript que itere sobre palavras em minúsculo chamando <code>crypto.subtle.digest('SHA-256', ...)</code> até achar o hash cujo final confira!
+                </div>
+            </div>
+
+            <div class="unlock-form" style="margin-top:16px;">
+                <input type="text" class="unlock-input" id="pass-input" placeholder="Digite a palavra-chave de 7 letras" maxlength="20" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') unlockVault()" value="adapter">
+                <button class="unlock-btn" id="btn-unlock" onclick="unlockVault()">
+                    <span>🔓 Desbloquear Gabarito Oficial</span>
+                </button>
+            </div>
+
+            <div class="vault-msg success" id="vault-msg" style="display: block;">🎉 Chave Correta! Gabarito Oficial e Código Completo da Lista Desbloqueados!</div>
+
+            <div id="encrypted-payload" style="display:none;" data-iv="sr13KmVSUpOQruUY" data-ct="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"></div>
+
+            <!-- Container do Gabarito Descriptografado -->
+            <div id="decrypted-container" style="display: block;"><p></p><h1 style="color:var(--primary); border-bottom:2px solid var(--border); padding-bottom:8px;">GABARITO OFICIAL DA LISTA • AULA 29</h1>
+<h2 style="color:var(--primary); margin-top:24px;">Módulo de Persistência • Implementação Completa BookStore (DAO &amp; Mapeamento)</h2>
+<strong>Docente:</strong> Prof. Me. Júlio B. Herculani  
+<strong>Status da Criptografia:</strong> Autenticado e Descriptografado via AES-GCM (256-bit).<p></p><p></p><hr style="border:0; border-top:1px solid #cbd5e1; margin:20px 0;"><p></p><p></p><h3 style="color:var(--secondary); margin-top:20px;">1. Script SQL de Infraestrutura &amp; Modelagem: <code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-family:monospace; color:#0f172a;">schema.sql</code></h3>
+Abaixo está a definição do esquema relacional e as consultas essenciais para o banco de dados SQLite (<code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-family:monospace; color:#0f172a;">livraria.db</code>). Este script cria a tabela de livros com chave primária autoincrementável e fornece uma carga inicial e consultas de auditoria:<p></p><p></p><pre class="language-sql" tabindex="0"><code class="language-sql">
+<span class="token comment">-- 1. Criação determinística da tabela do catálogo de livros</span>
+<span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> <span class="token keyword">IF</span> <span class="token operator">NOT</span> <span class="token keyword">EXISTS</span> livros <span class="token punctuation">(</span>
+    id <span class="token keyword">INTEGER</span> <span class="token keyword">PRIMARY</span> <span class="token keyword">KEY</span> AUTOINCREMENT<span class="token punctuation">,</span>
+    titulo <span class="token keyword">TEXT</span> <span class="token operator">NOT</span> <span class="token boolean">NULL</span><span class="token punctuation">,</span>
+    autor <span class="token keyword">TEXT</span> <span class="token operator">NOT</span> <span class="token boolean">NULL</span><span class="token punctuation">,</span>
+    preco <span class="token keyword">REAL</span> <span class="token operator">NOT</span> <span class="token boolean">NULL</span>
+<span class="token punctuation">)</span><span class="token punctuation">;</span><span class="token comment">-- 2. Carga inicial de dados para homologação e testes de bancada</span>
+<span class="token keyword">INSERT</span> <span class="token keyword">INTO</span> livros <span class="token punctuation">(</span>titulo<span class="token punctuation">,</span> autor<span class="token punctuation">,</span> preco<span class="token punctuation">)</span> <span class="token keyword">VALUES</span> 
+<span class="token punctuation">(</span><span class="token string">'Clean Code'</span><span class="token punctuation">,</span> <span class="token string">'Robert C. Martin'</span><span class="token punctuation">,</span> <span class="token number">89.90</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+<span class="token punctuation">(</span><span class="token string">'Design Patterns'</span><span class="token punctuation">,</span> <span class="token string">'Erich Gamma et al.'</span><span class="token punctuation">,</span> <span class="token number">125.50</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+<span class="token punctuation">(</span><span class="token string">'Refactoring'</span><span class="token punctuation">,</span> <span class="token string">'Martin Fowler'</span><span class="token punctuation">,</span> <span class="token number">98.00</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code><p><code class="language-sql"><span class="token comment">-- 3. Consultas canônicas de verificação e auditoria</span>
+<span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> livros <span class="token keyword">ORDER</span> <span class="token keyword">BY</span> titulo<span class="token punctuation">;</span>
+<span class="token keyword">SELECT</span> id<span class="token punctuation">,</span> titulo<span class="token punctuation">,</span> autor<span class="token punctuation">,</span> preco <span class="token keyword">FROM</span> livros <span class="token keyword">WHERE</span> id <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+</code></p></pre><p></p><p></p><hr style="border:0; border-top:1px solid #cbd5e1; margin:20px 0;"><p></p><p></p><h3 style="color:var(--secondary); margin-top:20px;">2. Fábrica de Conexões Centralizada: <code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-family:monospace; color:#0f172a;">ConexaoFactory.java</code></h3>
+Centraliza a URL de conexão com o SQLite (<code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-family:monospace; color:#0f172a;">livraria.db</code>) e encapsula o carregamento do driver JDBC:<p></p><p></p><pre class="language-java" tabindex="0"><code class="language-java">
+<span class="token keyword">package</span> <span class="token namespace">br<span class="token punctuation">.</span>com<span class="token punctuation">.</span>bookstore<span class="token punctuation">.</span>factory</span><span class="token punctuation">;</span><span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>sql<span class="token punctuation">.</span></span><span class="token class-name">Connection</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>sql<span class="token punctuation">.</span></span><span class="token class-name">DriverManager</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>sql<span class="token punctuation">.</span></span><span class="token class-name">SQLException</span></span><span class="token punctuation">;</span><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">ConexaoFactory</span> <span class="token punctuation">{</span>
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token class-name">String</span> <span class="token constant">URL</span> <span class="token operator">=</span> <span class="token string">"jdbc:sqlite:livraria.db"</span><span class="token punctuation">;</span>    <span class="token keyword">private</span> <span class="token class-name">ConexaoFactory</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token comment">// Construtor privado para evitar instanciação (classe puramente utilitária)</span>
+    <span class="token punctuation">}</span></code><p><code class="language-java">    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token class-name">Connection</span> <span class="token function">obterConexao</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">SQLException</span> <span class="token punctuation">{</span>
+        <span class="token keyword">try</span> <span class="token punctuation">{</span>
+            <span class="token class-name">Class</span><span class="token punctuation">.</span><span class="token function">forName</span><span class="token punctuation">(</span><span class="token string">"org.sqlite.JDBC"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> <span class="token class-name">DriverManager</span><span class="token punctuation">.</span><span class="token function">getConnection</span><span class="token punctuation">(</span><span class="token constant">URL</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">ClassNotFoundException</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">SQLException</span><span class="token punctuation">(</span><span class="token string">"Driver JDBC do SQLite não localizado no classpath!"</span><span class="token punctuation">,</span> e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></p></pre><p></p><p></p><hr style="border:0; border-top:1px solid #cbd5e1; margin:20px 0;"><p></p><p></p><h3 style="color:var(--secondary); margin-top:20px;">3. Entidade de Domínio Pura: <code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-family:monospace; color:#0f172a;">Livro.java</code></h3>
+Modelo de domínio rico com blindagem de invariantes no construtor e zero acoplamento a bibliotecas de persistência ou SQL:<p></p><p></p><pre class="language-java" tabindex="0"><code class="language-java">
+<span class="token keyword">package</span> <span class="token namespace">br<span class="token punctuation">.</span>com<span class="token punctuation">.</span>bookstore<span class="token punctuation">.</span>model</span><span class="token punctuation">;</span><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Livro</span> <span class="token punctuation">{</span>
+    <span class="token keyword">private</span> <span class="token class-name">Long</span> id<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token class-name">String</span> titulo<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token class-name">String</span> autor<span class="token punctuation">;</span>
+    <span class="token keyword">private</span> <span class="token keyword">double</span> preco<span class="token punctuation">;</span>    <span class="token comment">// Construtor completo para hidratação vinda do banco de dados</span>
+    <span class="token keyword">public</span> <span class="token class-name">Livro</span><span class="token punctuation">(</span><span class="token class-name">Long</span> id<span class="token punctuation">,</span> <span class="token class-name">String</span> titulo<span class="token punctuation">,</span> <span class="token class-name">String</span> autor<span class="token punctuation">,</span> <span class="token keyword">double</span> preco<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>titulo <span class="token operator">==</span> <span class="token keyword">null</span> <span class="token operator">||</span> titulo<span class="token punctuation">.</span><span class="token function">trim</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">length</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&lt;</span> <span class="token number">2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IllegalArgumentException</span><span class="token punctuation">(</span><span class="token string">"O título do livro é obrigatório e deve ter no mínimo 2 caracteres!"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>autor <span class="token operator">==</span> <span class="token keyword">null</span> <span class="token operator">||</span> autor<span class="token punctuation">.</span><span class="token function">trim</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">isEmpty</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IllegalArgumentException</span><span class="token punctuation">(</span><span class="token string">"O autor do livro é obrigatório!"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>preco <span class="token operator">&lt;=</span> <span class="token number">0.0</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IllegalArgumentException</span><span class="token punctuation">(</span><span class="token string">"O preço do livro deve ser estritamente positivo!"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>id <span class="token operator">=</span> id<span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>titulo <span class="token operator">=</span> titulo<span class="token punctuation">.</span><span class="token function">trim</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>autor <span class="token operator">=</span> autor<span class="token punctuation">.</span><span class="token function">trim</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>preco <span class="token operator">=</span> preco<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>    <span class="token comment">// Construtor de conveniência para cadastro novo (sem ID)</span>
+    <span class="token keyword">public</span> <span class="token class-name">Livro</span><span class="token punctuation">(</span><span class="token class-name">String</span> titulo<span class="token punctuation">,</span> <span class="token class-name">String</span> autor<span class="token punctuation">,</span> <span class="token keyword">double</span> preco<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">this</span><span class="token punctuation">(</span><span class="token keyword">null</span><span class="token punctuation">,</span> titulo<span class="token punctuation">,</span> autor<span class="token punctuation">,</span> preco<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>    <span class="token keyword">public</span> <span class="token class-name">Long</span> <span class="token function">getId</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token keyword">return</span> id<span class="token punctuation">;</span> <span class="token punctuation">}</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">setId</span><span class="token punctuation">(</span><span class="token class-name">Long</span> id<span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token keyword">this</span><span class="token punctuation">.</span>id <span class="token operator">=</span> id<span class="token punctuation">;</span> <span class="token punctuation">}</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">getTitulo</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token keyword">return</span> titulo<span class="token punctuation">;</span> <span class="token punctuation">}</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">getAutor</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token keyword">return</span> autor<span class="token punctuation">;</span> <span class="token punctuation">}</span>
+    <span class="token keyword">public</span> <span class="token keyword">double</span> <span class="token function">getPreco</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token keyword">return</span> preco<span class="token punctuation">;</span> <span class="token punctuation">}</span></code><p><code class="language-java">    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> <span class="token class-name">String</span><span class="token punctuation">.</span><span class="token function">format</span><span class="token punctuation">(</span><span class="token string">"[#%d] %s (Autor: %s) - R$ %.2f"</span><span class="token punctuation">,</span> id<span class="token punctuation">,</span> titulo<span class="token punctuation">,</span> autor<span class="token punctuation">,</span> preco<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></p></pre><p></p><p></p><hr style="border:0; border-top:1px solid #cbd5e1; margin:20px 0;"><p></p><p></p><h3 style="color:var(--secondary); margin-top:20px;">4. Contrato Formal da Camada de Dados: <code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-family:monospace; color:#0f172a;">LivroDAO.java</code></h3>
+Interface que define as operações do catálogo sem expor detalhes tecnológicos do banco relacional (Princípio da Inversão de Dependência - DIP):<p></p><p></p><pre class="language-java" tabindex="0"><code class="language-java">
+<span class="token keyword">package</span> <span class="token namespace">br<span class="token punctuation">.</span>com<span class="token punctuation">.</span>bookstore<span class="token punctuation">.</span>dao</span><span class="token punctuation">;</span><span class="token keyword">import</span> <span class="token import"><span class="token namespace">br<span class="token punctuation">.</span>com<span class="token punctuation">.</span>bookstore<span class="token punctuation">.</span>model<span class="token punctuation">.</span></span><span class="token class-name">Livro</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>util<span class="token punctuation">.</span></span><span class="token class-name">List</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>util<span class="token punctuation">.</span></span><span class="token class-name">Optional</span></span><span class="token punctuation">;</span></code><p><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token class-name">LivroDAO</span> <span class="token punctuation">{</span>
+    <span class="token keyword">void</span> <span class="token function">salvar</span><span class="token punctuation">(</span><span class="token class-name">Livro</span> livro<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token class-name">Optional</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Livro</span><span class="token punctuation">&gt;</span></span> <span class="token function">buscarPorId</span><span class="token punctuation">(</span><span class="token class-name">Long</span> id<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Livro</span><span class="token punctuation">&gt;</span></span> <span class="token function">listarTodos</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></p></pre><p></p><p></p><hr style="border:0; border-top:1px solid #cbd5e1; margin:20px 0;"><p></p><p></p><h3 style="color:var(--secondary); margin-top:20px;">5. Implementação Canônica com JDBC: <code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-family:monospace; color:#0f172a;">LivroDAOSqlite.java</code></h3>
+Implementação concreta utilizando <code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-family:monospace; color:#0f172a;">PreparedStatement</code>, <code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-family:monospace; color:#0f172a;">try-with-resources</code> e o método canônico de mapeamento <code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-family:monospace; color:#0f172a;">mapearLinha(ResultSet)</code>:<p></p><p></p><pre class="language-java" tabindex="0"><code class="language-java">
+<span class="token keyword">package</span> <span class="token namespace">br<span class="token punctuation">.</span>com<span class="token punctuation">.</span>bookstore<span class="token punctuation">.</span>dao</span><span class="token punctuation">;</span><span class="token keyword">import</span> <span class="token import"><span class="token namespace">br<span class="token punctuation">.</span>com<span class="token punctuation">.</span>bookstore<span class="token punctuation">.</span>factory<span class="token punctuation">.</span></span><span class="token class-name">ConexaoFactory</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">br<span class="token punctuation">.</span>com<span class="token punctuation">.</span>bookstore<span class="token punctuation">.</span>model<span class="token punctuation">.</span></span><span class="token class-name">Livro</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>sql<span class="token punctuation">.</span></span><span class="token class-name">Connection</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>sql<span class="token punctuation">.</span></span><span class="token class-name">PreparedStatement</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>sql<span class="token punctuation">.</span></span><span class="token class-name">ResultSet</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>sql<span class="token punctuation">.</span></span><span class="token class-name">SQLException</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>sql<span class="token punctuation">.</span></span><span class="token class-name">Statement</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>util<span class="token punctuation">.</span></span><span class="token class-name">ArrayList</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>util<span class="token punctuation">.</span></span><span class="token class-name">List</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>util<span class="token punctuation">.</span></span><span class="token class-name">Optional</span></span><span class="token punctuation">;</span><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">LivroDAOSqlite</span> <span class="token keyword">implements</span> <span class="token class-name">LivroDAO</span> <span class="token punctuation">{</span>    <span class="token keyword">public</span> <span class="token class-name">LivroDAOSqlite</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token function">criarTabelaSeNaoExistir</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>    <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">criarTabelaSeNaoExistir</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token class-name">String</span> sql <span class="token operator">=</span> <span class="token string">"CREATE TABLE IF NOT EXISTS livros ("</span> <span class="token operator">+</span>
+                     <span class="token string">"id INTEGER PRIMARY KEY AUTOINCREMENT, "</span> <span class="token operator">+</span>
+                     <span class="token string">"titulo TEXT NOT NULL, "</span> <span class="token operator">+</span>
+                     <span class="token string">"autor TEXT NOT NULL, "</span> <span class="token operator">+</span>
+                     <span class="token string">"preco REAL NOT NULL);"</span><span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token punctuation">(</span><span class="token class-name">Connection</span> conn <span class="token operator">=</span> <span class="token class-name">ConexaoFactory</span><span class="token punctuation">.</span><span class="token function">obterConexao</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+             <span class="token class-name">Statement</span> stmt <span class="token operator">=</span> conn<span class="token punctuation">.</span><span class="token function">createStatement</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            stmt<span class="token punctuation">.</span><span class="token function">execute</span><span class="token punctuation">(</span>sql<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">SQLException</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">RuntimeException</span><span class="token punctuation">(</span><span class="token string">"Falha ao inicializar tabela 'livros' no SQLite: "</span> <span class="token operator">+</span> e<span class="token punctuation">.</span><span class="token function">getMessage</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>    <span class="token keyword">private</span> <span class="token class-name">Livro</span> <span class="token function">mapearLinha</span><span class="token punctuation">(</span><span class="token class-name">ResultSet</span> rs<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">SQLException</span> <span class="token punctuation">{</span>
+        <span class="token class-name">Long</span> id <span class="token operator">=</span> rs<span class="token punctuation">.</span><span class="token function">getLong</span><span class="token punctuation">(</span><span class="token string">"id"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">String</span> titulo <span class="token operator">=</span> rs<span class="token punctuation">.</span><span class="token function">getString</span><span class="token punctuation">(</span><span class="token string">"titulo"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">String</span> autor <span class="token operator">=</span> rs<span class="token punctuation">.</span><span class="token function">getString</span><span class="token punctuation">(</span><span class="token string">"autor"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">double</span> preco <span class="token operator">=</span> rs<span class="token punctuation">.</span><span class="token function">getDouble</span><span class="token punctuation">(</span><span class="token string">"preco"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">Livro</span><span class="token punctuation">(</span>id<span class="token punctuation">,</span> titulo<span class="token punctuation">,</span> autor<span class="token punctuation">,</span> preco<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">salvar</span><span class="token punctuation">(</span><span class="token class-name">Livro</span> livro<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token class-name">String</span> sql <span class="token operator">=</span> <span class="token string">"INSERT INTO livros (titulo, autor, preco) VALUES (?, ?, ?);"</span><span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token punctuation">(</span><span class="token class-name">Connection</span> conn <span class="token operator">=</span> <span class="token class-name">ConexaoFactory</span><span class="token punctuation">.</span><span class="token function">obterConexao</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+             <span class="token class-name">PreparedStatement</span> stmt <span class="token operator">=</span> conn<span class="token punctuation">.</span><span class="token function">prepareStatement</span><span class="token punctuation">(</span>sql<span class="token punctuation">,</span> <span class="token class-name">Statement</span><span class="token punctuation">.</span><span class="token constant">RETURN_GENERATED_KEYS</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            
+            stmt<span class="token punctuation">.</span><span class="token function">setString</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> livro<span class="token punctuation">.</span><span class="token function">getTitulo</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            stmt<span class="token punctuation">.</span><span class="token function">setString</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">,</span> livro<span class="token punctuation">.</span><span class="token function">getAutor</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            stmt<span class="token punctuation">.</span><span class="token function">setDouble</span><span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">,</span> livro<span class="token punctuation">.</span><span class="token function">getPreco</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            stmt<span class="token punctuation">.</span><span class="token function">executeUpdate</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>            <span class="token keyword">try</span> <span class="token punctuation">(</span><span class="token class-name">ResultSet</span> chaves <span class="token operator">=</span> stmt<span class="token punctuation">.</span><span class="token function">getGeneratedKeys</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>chaves<span class="token punctuation">.</span><span class="token function">next</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                    livro<span class="token punctuation">.</span><span class="token function">setId</span><span class="token punctuation">(</span>chaves<span class="token punctuation">.</span><span class="token function">getLong</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token punctuation">}</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">SQLException</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">RuntimeException</span><span class="token punctuation">(</span><span class="token string">"Erro ao salvar livro: "</span> <span class="token operator">+</span> e<span class="token punctuation">.</span><span class="token function">getMessage</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">Optional</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Livro</span><span class="token punctuation">&gt;</span></span> <span class="token function">buscarPorId</span><span class="token punctuation">(</span><span class="token class-name">Long</span> id<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token class-name">String</span> sql <span class="token operator">=</span> <span class="token string">"SELECT id, titulo, autor, preco FROM livros WHERE id = ?;"</span><span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token punctuation">(</span><span class="token class-name">Connection</span> conn <span class="token operator">=</span> <span class="token class-name">ConexaoFactory</span><span class="token punctuation">.</span><span class="token function">obterConexao</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+             <span class="token class-name">PreparedStatement</span> stmt <span class="token operator">=</span> conn<span class="token punctuation">.</span><span class="token function">prepareStatement</span><span class="token punctuation">(</span>sql<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            
+            stmt<span class="token punctuation">.</span><span class="token function">setLong</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> id<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">try</span> <span class="token punctuation">(</span><span class="token class-name">ResultSet</span> rs <span class="token operator">=</span> stmt<span class="token punctuation">.</span><span class="token function">executeQuery</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>rs<span class="token punctuation">.</span><span class="token function">next</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                    <span class="token keyword">return</span> <span class="token class-name">Optional</span><span class="token punctuation">.</span><span class="token function">of</span><span class="token punctuation">(</span><span class="token function">mapearLinha</span><span class="token punctuation">(</span>rs<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token punctuation">}</span>
+                <span class="token keyword">return</span> <span class="token class-name">Optional</span><span class="token punctuation">.</span><span class="token function">empty</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">SQLException</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">RuntimeException</span><span class="token punctuation">(</span><span class="token string">"Erro ao buscar livro por ID: "</span> <span class="token operator">+</span> e<span class="token punctuation">.</span><span class="token function">getMessage</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span></code><p><code class="language-java">    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Livro</span><span class="token punctuation">&gt;</span></span> <span class="token function">listarTodos</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token class-name">String</span> sql <span class="token operator">=</span> <span class="token string">"SELECT id, titulo, autor, preco FROM livros ORDER BY titulo;"</span><span class="token punctuation">;</span>
+        <span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Livro</span><span class="token punctuation">&gt;</span></span> lista <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ArrayList</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">&gt;</span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token punctuation">(</span><span class="token class-name">Connection</span> conn <span class="token operator">=</span> <span class="token class-name">ConexaoFactory</span><span class="token punctuation">.</span><span class="token function">obterConexao</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+             <span class="token class-name">PreparedStatement</span> stmt <span class="token operator">=</span> conn<span class="token punctuation">.</span><span class="token function">prepareStatement</span><span class="token punctuation">(</span>sql<span class="token punctuation">)</span><span class="token punctuation">;</span>
+             <span class="token class-name">ResultSet</span> rs <span class="token operator">=</span> stmt<span class="token punctuation">.</span><span class="token function">executeQuery</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            
+            <span class="token keyword">while</span> <span class="token punctuation">(</span>rs<span class="token punctuation">.</span><span class="token function">next</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                lista<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span><span class="token function">mapearLinha</span><span class="token punctuation">(</span>rs<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">SQLException</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">RuntimeException</span><span class="token punctuation">(</span><span class="token string">"Erro ao listar livros: "</span> <span class="token operator">+</span> e<span class="token punctuation">.</span><span class="token function">getMessage</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+        <span class="token keyword">return</span> lista<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></p></pre><p></p><p></p><hr style="border:0; border-top:1px solid #cbd5e1; margin:20px 0;"><p></p><p></p><h3 style="color:var(--secondary); margin-top:20px;">6. Execução e Homologação: <code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-family:monospace; color:#0f172a;">Main.java</code></h3>
+Classe executável que implementa o roteiro oficial de testes da livraria BookStore:<p></p><p></p><pre class="language-java" tabindex="0"><code class="language-java">
+<span class="token keyword">package</span> <span class="token namespace">br<span class="token punctuation">.</span>com<span class="token punctuation">.</span>bookstore</span><span class="token punctuation">;</span><span class="token keyword">import</span> <span class="token import"><span class="token namespace">br<span class="token punctuation">.</span>com<span class="token punctuation">.</span>bookstore<span class="token punctuation">.</span>dao<span class="token punctuation">.</span></span><span class="token class-name">LivroDAO</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">br<span class="token punctuation">.</span>com<span class="token punctuation">.</span>bookstore<span class="token punctuation">.</span>dao<span class="token punctuation">.</span></span><span class="token class-name">LivroDAOSqlite</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">br<span class="token punctuation">.</span>com<span class="token punctuation">.</span>bookstore<span class="token punctuation">.</span>model<span class="token punctuation">.</span></span><span class="token class-name">Livro</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token import"><span class="token namespace">java<span class="token punctuation">.</span>util<span class="token punctuation">.</span></span><span class="token class-name">List</span></span><span class="token punctuation">;</span><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Main</span> <span class="token punctuation">{</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"===================================================="</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"  LIVRARIA BOOKSTORE ENTERPRISE • TESTE CANÔNICO DAO"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"===================================================="</span><span class="token punctuation">)</span><span class="token punctuation">;</span>        <span class="token comment">// 1. Instanciação desacoplada via Interface (Inversão de Dependência)</span>
+        <span class="token class-name">LivroDAO</span> dao <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">LivroDAOSqlite</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>        <span class="token comment">// 2. Persistência de 3 obras literárias</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"\n--- 1. Cadastrando Livros no SQLite ---"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Livro</span> l1 <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Livro</span><span class="token punctuation">(</span><span class="token string">"Clean Code"</span><span class="token punctuation">,</span> <span class="token string">"Robert C. Martin"</span><span class="token punctuation">,</span> <span class="token number">89.90</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Livro</span> l2 <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Livro</span><span class="token punctuation">(</span><span class="token string">"Design Patterns"</span><span class="token punctuation">,</span> <span class="token string">"Erich Gamma et al."</span><span class="token punctuation">,</span> <span class="token number">125.50</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">Livro</span> l3 <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Livro</span><span class="token punctuation">(</span><span class="token string">"Refactoring"</span><span class="token punctuation">,</span> <span class="token string">"Martin Fowler"</span><span class="token punctuation">,</span> <span class="token number">98.00</span><span class="token punctuation">)</span><span class="token punctuation">;</span>        dao<span class="token punctuation">.</span><span class="token function">salvar</span><span class="token punctuation">(</span>l1<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        dao<span class="token punctuation">.</span><span class="token function">salvar</span><span class="token punctuation">(</span>l2<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        dao<span class="token punctuation">.</span><span class="token function">salvar</span><span class="token punctuation">(</span>l3<span class="token punctuation">)</span><span class="token punctuation">;</span>        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"Livro salvo com sucesso: "</span> <span class="token operator">+</span> l1<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"Livro salvo com sucesso: "</span> <span class="token operator">+</span> l2<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"Livro salvo com sucesso: "</span> <span class="token operator">+</span> l3<span class="token punctuation">)</span><span class="token punctuation">;</span>        <span class="token comment">// 3. Consulta por ID existente (ID = 2) com ifPresentOrElse</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"\n--- 2. Consulta por ID Existente (ID: 2) ---"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        dao<span class="token punctuation">.</span><span class="token function">buscarPorId</span><span class="token punctuation">(</span><span class="token number">2L</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">ifPresentOrElse</span><span class="token punctuation">(</span>
+            livro <span class="token operator">-&gt;</span> <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"Encontrado: "</span> <span class="token operator">+</span> livro<span class="token punctuation">)</span><span class="token punctuation">,</span>
+            <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-&gt;</span> <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"Livro não localizado!"</span><span class="token punctuation">)</span>
+        <span class="token punctuation">)</span><span class="token punctuation">;</span>        <span class="token comment">// 4. Consulta por ID inexistente (ID = 999) com Optional seguro (sem NPE)</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"\n--- 3. Consulta por ID Inexistente (ID: 999) ---"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        dao<span class="token punctuation">.</span><span class="token function">buscarPorId</span><span class="token punctuation">(</span><span class="token number">999L</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">ifPresentOrElse</span><span class="token punctuation">(</span>
+            livro <span class="token operator">-&gt;</span> <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"Encontrado: "</span> <span class="token operator">+</span> livro<span class="token punctuation">)</span><span class="token punctuation">,</span>
+            <span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-&gt;</span> <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"Livro com ID 999 não encontrado (Optional.empty tratado com segurança!)."</span><span class="token punctuation">)</span>
+        <span class="token punctuation">)</span><span class="token punctuation">;</span></code><p><code class="language-java">        <span class="token comment">// 5. Listagem completa formatada</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"\n--- 4. Listagem Geral do Acervo ---"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Livro</span><span class="token punctuation">&gt;</span></span> catalogo <span class="token operator">=</span> dao<span class="token punctuation">.</span><span class="token function">listarTodos</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"%-6s | %-25s | %-22s | %-10s%n"</span><span class="token punctuation">,</span> <span class="token string">"ID"</span><span class="token punctuation">,</span> <span class="token string">"TÍTULO"</span><span class="token punctuation">,</span> <span class="token string">"AUTOR"</span><span class="token punctuation">,</span> <span class="token string">"PREÇO"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"----------------------------------------------------------------------"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token class-name">Livro</span> l <span class="token operator">:</span> catalogo<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">printf</span><span class="token punctuation">(</span><span class="token string">"#%-5d | %-25s | %-22s | R$ %8.2f%n"</span><span class="token punctuation">,</span>
+                l<span class="token punctuation">.</span><span class="token function">getId</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> l<span class="token punctuation">.</span><span class="token function">getTitulo</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> l<span class="token punctuation">.</span><span class="token function">getAutor</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> l<span class="token punctuation">.</span><span class="token function">getPreco</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"===================================================="</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></p></pre>
+<p></p></div>
+        </div>
+    </div>
+
+    <footer>
+        Laboratório Interativo de POO • Módulo de Persistência • UniCesumar 2026<br>
+        Ambiente 100% Autônomo e Confinado
+    </footer>
+
+</div>
+
+<!-- Prism.js Script para realce de código Java -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+
+<script>
+    // Hashes SHA-256 das alternativas corretas (Anti-Cheat / Anti-Gemini)
+    const HASH_CORRETAS = {
+        q1: '045409afe80dcdf20f0dfe6614c092afed1167012b0deba4d629c5cd3e0c2589', // q1_b
+        q2: 'dc83d9010371ea2a3d389147a0d7644eeb110aa4970f5148d42045913e4ecfaf', // q2_c
+        q3: '3512e5d8456c49c1a3143756215eb3b772f2e8b21a5f1237785f172d829316c5', // q3_a
+        q4: '23e74d262d921ef1f2366f7d4361a4a5c3da376b87fd5d508024b253f8d9e6c6'  // q4_d
+    };
+
+    // Estado reativo dos 7 Itens
+    const statusItens = {
+        q1: false,
+        q2: false,
+        q3: false,
+        q4: false,
+        code1: false,
+        code2: false,
+        code3: false
+    };
+
+    async function sha256(str) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(str);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function atualizarProgresso() {
+        const total = 7;
+        const acertos = Object.values(statusItens).filter(Boolean).length;
+        const perc = Math.round((acertos / total) * 100);
+
+        const trackFill = document.getElementById('progress-fill');
+        const trackText = document.getElementById('progress-text');
+        if (trackFill) trackFill.style.width = perc + '%';
+        if (trackText) trackText.innerText = `${acertos} de ${total} Concluídos (${perc}%)`;
+
+        if (acertos === total) {
+            const taskSection = document.getElementById('official-task-section');
+            if (taskSection && taskSection.style.display !== 'block') {
+                taskSection.style.display = 'block';
+                taskSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    }
+
+    async function selectRadio(qId, optId) {
+        const radio = document.getElementById(optId);
+        if (radio) radio.checked = true;
+
+        const hash = await sha256(optId);
+        const isCorrect = (hash === HASH_CORRETAS[qId]);
+
+        const card = document.getElementById('card-' + qId);
+        const fb = document.getElementById('fb-' + qId);
+
+        if (isCorrect) {
+            if (card) {
+                card.classList.add('answered-correct');
+                card.classList.remove('answered-incorrect');
+            }
+            if (fb) {
+                fb.className = 'feedback-box correct';
+                fb.innerHTML = '✔️ <strong>Resposta Exata!</strong> Você demonstrou compreensão do princípio arquitetural avaliado.';
+                fb.style.display = 'block';
+            }
+            statusItens[qId] = true;
+        } else {
+            if (card) {
+                card.classList.add('answered-incorrect');
+                card.classList.remove('answered-correct');
+            }
+            if (fb) {
+                fb.className = 'feedback-box incorrect';
+                fb.innerHTML = '❌ <strong>Alternativa Incorreta!</strong> Releia o bloco de fundamentação teórica acima e atente-se às diretrizes de POO.';
+                fb.style.display = 'block';
+            }
+            statusItens[qId] = false;
+        }
+        atualizarProgresso();
+    }
+
+    // Remove comentários // e /* */ para testar apenas o código executável do aluno
+    function stripComments(code) {
+        let c = code.replace(/\/\*[\s\S]*?\*\//g, '');
+        c = c.replace(/\/\/.*/g, '');
+        return c.replace(/\s+/g, ' ').trim();
+    }
+
+    // Validador Desafio 1: mapearLinha
+    function validarMapearLinha() {
+        const code = document.getElementById('code-mapear').value;
+        const c = stripComments(code);
+        const fb = document.getElementById('feedback-code1');
+        const card = document.getElementById('card-code1');
+
+        const hasGetTitulo = /rs\s*\.\s*getString\s*\(\s*["']titulo["']\s*\)/i.test(c);
+        const hasGetAutor = /rs\s*\.\s*getString\s*\(\s*["']autor["']\s*\)/i.test(c);
+        const hasGetPreco = /rs\s*\.\s*getDouble\s*\(\s*["']preco["']\s*\)/i.test(c);
+        const hasReturn = /return\s+new\s+Livro\s*\(/i.test(c);
+
+        if (hasGetTitulo && hasGetAutor && hasGetPreco && hasReturn) {
+            fb.className = 'code-feedback success';
+            fb.innerHTML = '✔️ <strong>Implementação Perfeita!</strong> O mapeador extrai as colunas com tipagem estrita e devolve a entidade completa via construtor.';
+            fb.style.display = 'block';
+            statusItens.code1 = true;
+            if (card) {
+                card.classList.add('answered-correct');
+                card.classList.remove('answered-incorrect');
+            }
+        } else {
+            fb.className = 'code-feedback error';
+            let errs = [];
+            if (!hasGetTitulo) errs.push('extrair "titulo" com rs.getString("titulo")');
+            if (!hasGetAutor) errs.push('extrair "autor" com rs.getString("autor")');
+            if (!hasGetPreco) errs.push('extrair "preco" com rs.getDouble("preco")');
+            if (!hasReturn) errs.push('retornar new Livro(...)');
+            fb.innerHTML = '❌ <strong>Ajuste Necessário:</strong> Faltou: ' + errs.join(', ') + '.';
+            fb.style.display = 'block';
+            statusItens.code1 = false;
+            if (card) {
+                card.classList.add('answered-incorrect');
+                card.classList.remove('answered-correct');
+            }
+        }
+        atualizarProgresso();
+    }
+
+    function resetCode1() {
+        document.getElementById('code-mapear').value = `// Complete a implementação do método abaixo:
+private Livro mapearLinha(ResultSet rs) throws SQLException {
+    Long id = rs.getLong("id");
+    // TODO: Extraia titulo (String), autor (String) e preco (double)
+    
+    // TODO: Retorne a instância completa de Livro
+    
+}`;
+        const fb = document.getElementById('feedback-code1');
+        if (fb) {
+            fb.style.display = 'none';
+            fb.className = 'code-feedback';
+            fb.innerHTML = '';
+        }
+        const card = document.getElementById('card-code1');
+        if (card) card.classList.remove('answered-correct', 'answered-incorrect');
+        statusItens.code1 = false;
+        atualizarProgresso();
+    }
+
+    // Validador Desafio 2: salvar
+    function validarSalvar() {
+        const code = document.getElementById('code-salvar').value;
+        const c = stripComments(code);
+        const fb = document.getElementById('feedback-code2');
+        const card = document.getElementById('card-code2');
+
+        const hasSetString1 = /stmt\s*\.\s*setString\s*\(\s*1\s*,/i.test(c);
+        const hasSetString2 = /stmt\s*\.\s*setString\s*\(\s*2\s*,/i.test(c);
+        const hasSetDouble3 = /stmt\s*\.\s*setDouble\s*\(\s*3\s*,/i.test(c);
+        const hasExecUpdate = /stmt\s*\.\s*executeUpdate\s*\(\s*\)/i.test(c);
+        const hasGetKeys = /getGeneratedKeys\s*\(\s*\)/i.test(c);
+        const hasSetId = /livro\s*\.\s*setId\s*\(/i.test(c);
+
+        if (hasSetString1 && hasSetString2 && hasSetDouble3 && hasExecUpdate && hasGetKeys && hasSetId) {
+            fb.className = 'code-feedback success';
+            fb.innerHTML = '✔️ <strong>Código Canônico e Seguro!</strong> PreparedStatement tipado sem risco de SQL Injection e ID gerado sincronizado no objeto da memória.';
+            fb.style.display = 'block';
+            statusItens.code2 = true;
+            if (card) {
+                card.classList.add('answered-correct');
+                card.classList.remove('answered-incorrect');
+            }
+        } else {
+            fb.className = 'code-feedback error';
+            let errs = [];
+            if (!hasSetString1 || !hasSetString2 || !hasSetDouble3) errs.push('configurar os 3 parâmetros no stmt (índices 1, 2 e 3)');
+            if (!hasExecUpdate) errs.push('executar stmt.executeUpdate()');
+            if (!hasGetKeys || !hasSetId) errs.push('recuperar chaves geradas e chamar livro.setId(...)');
+            fb.innerHTML = '❌ <strong>Falha na Validação:</strong> Faltou: ' + errs.join(', ') + '.';
+            fb.style.display = 'block';
+            statusItens.code2 = false;
+            if (card) {
+                card.classList.add('answered-incorrect');
+                card.classList.remove('answered-correct');
+            }
+        }
+        atualizarProgresso();
+    }
+
+    function resetCode2() {
+        document.getElementById('code-salvar').value = `@Override
+public void salvar(Livro livro) {
+    String sql = "INSERT INTO livros (titulo, autor, preco) VALUES (?, ?, ?);";
+    try (Connection conn = ConexaoFactory.obterConexao();
+         PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        
+        // TODO: Configure os 3 parâmetros tipados (setString, setDouble)
+        
+        // TODO: Execute a atualização no banco (executeUpdate)
+        
+        // TODO: Capture a chave gerada com stmt.getGeneratedKeys() e faça livro.setId(...)
+        
+    } catch (SQLException e) {
+        throw new RuntimeException("Erro ao salvar livro: " + e.getMessage(), e);
+    }
+}`;
+        const fb = document.getElementById('feedback-code2');
+        if (fb) {
+            fb.style.display = 'none';
+            fb.className = 'code-feedback';
+            fb.innerHTML = '';
+        }
+        const card = document.getElementById('card-code2');
+        if (card) card.classList.remove('answered-correct', 'answered-incorrect');
+        statusItens.code2 = false;
+        atualizarProgresso();
+    }
+
+    // Validador Desafio 3: buscarPorId
+    function validarBuscar() {
+        const code = document.getElementById('code-buscar').value;
+        const c = stripComments(code);
+        const fb = document.getElementById('feedback-code3');
+        const card = document.getElementById('card-code3');
+
+        const hasNext = /rs\s*\.\s*next\s*\(\s*\)/i.test(c);
+        const hasOptOf = /Optional\s*\.\s*of\s*\(/i.test(c);
+        const hasOptEmpty = /Optional\s*\.\s*empty\s*\(\s*\)/i.test(c);
+
+        if (hasNext && hasOptOf && hasOptEmpty) {
+            fb.className = 'code-feedback success';
+            fb.innerHTML = '✔️ <strong>Padrão de Ouro Aprovado!</strong> Reutilização elegante do método mapearLinha e tratamento blindado contra NullPointerException com Optional.';
+            fb.style.display = 'block';
+            statusItens.code3 = true;
+            if (card) {
+                card.classList.add('answered-correct');
+                card.classList.remove('answered-incorrect');
+            }
+        } else {
+            fb.className = 'code-feedback error';
+            let errs = [];
+            if (!hasNext) errs.push('testar se o registro existe com if (rs.next())');
+            if (!hasOptOf) errs.push('retornar Optional.of(mapearLinha(rs))');
+            if (!hasOptEmpty) errs.push('retornar Optional.empty() quando não encontrar');
+            fb.innerHTML = '❌ <strong>Atenção ao Padrão:</strong> ' + errs.join(', ') + '.';
+            fb.style.display = 'block';
+            statusItens.code3 = false;
+            if (card) {
+                card.classList.add('answered-incorrect');
+                card.classList.remove('answered-correct');
+            }
+        }
+        atualizarProgresso();
+    }
+
+    function resetCode3() {
+        document.getElementById('code-buscar').value = `@Override
+public Optional<Livro> buscarPorId(Long id) {
+    String sql = "SELECT id, titulo, autor, preco FROM livros WHERE id = ?;";
+    try (Connection conn = ConexaoFactory.obterConexao();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+        
+        stmt.setLong(1, id);
+        try (ResultSet rs = stmt.executeQuery()) {
+            // [ESCREVA SUA LÓGICA AQUI]:
+            // Se houver registro, retorne o Livro encapsulado na caixinha Optional
+            // Se o SELECT não encontrou nada, retorne a caixinha vazia
+            
+        }
+    } catch (SQLException e) {
+        throw new RuntimeException("Erro ao consultar livro por ID: " + e.getMessage(), e);
+    }
+}`;
+        const fb = document.getElementById('feedback-code3');
+        if (fb) {
+            fb.style.display = 'none';
+            fb.className = 'code-feedback';
+            fb.innerHTML = '';
+        }
+        const card = document.getElementById('card-code3');
+        if (card) card.classList.remove('answered-correct', 'answered-incorrect');
+        statusItens.code3 = false;
+        atualizarProgresso();
+    }
+
+    // Descriptografar Gabarito Oficial da Lista (AES-GCM WebCrypto)
+    async function unlockVault() {
+        const input = document.getElementById('pass-input');
+        const decContainer = document.getElementById('decrypted-container');
+        const payloadDiv = document.getElementById('encrypted-payload');
+        const password = input.value.trim().toLowerCase();
+
+        if (!password) {
+            showVaultMsg('Por favor, digite a chave de descriptografia!', 'error');
+            return;
+        }
+
+        try {
+            const encoder = new TextEncoder();
+            const pwUtf8 = encoder.encode(password);
+            const keyHash = await crypto.subtle.digest('SHA-256', pwUtf8);
+
+            const cryptoKey = await crypto.subtle.importKey(
+                'raw',
+                keyHash,
+                { name: 'AES-GCM' },
+                false,
+                ['decrypt']
+            );
+
+            const ivB64 = payloadDiv.getAttribute('data-iv');
+            const ctB64 = payloadDiv.getAttribute('data-ct');
+
+            const ivStr = atob(ivB64);
+            const iv = new Uint8Array(ivStr.length);
+            for (let i = 0; i < ivStr.length; i++) iv[i] = ivStr.charCodeAt(i);
+
+            const ctStr = atob(ctB64);
+            const ct = new Uint8Array(ctStr.length);
+            for (let i = 0; i < ctStr.length; i++) ct[i] = ctStr.charCodeAt(i);
+
+            const decryptedBuffer = await crypto.subtle.decrypt(
+                { name: 'AES-GCM', iv: iv },
+                cryptoKey,
+                ct
+            );
+
+            const decryptedText = new TextDecoder('utf-8').decode(decryptedBuffer);
+
+            showVaultMsg('🎉 Chave Correta! Gabarito Oficial e Código Completo da Lista Desbloqueados!', 'success');
+            renderMarkdown(decryptedText, decContainer);
+            decContainer.style.display = 'block';
+            decContainer.scrollIntoView({ behavior: 'smooth' });
+
+        } catch (err) {
+            showVaultMsg('❌ Chave Incorreta! A chave criptográfica não confere com o hash AES-GCM. Tente novamente!', 'error');
+            decContainer.style.display = 'none';
+        }
+    }
+
+    function showVaultMsg(text, type) {
+        const msg = document.getElementById('vault-msg');
+        if (msg) {
+            msg.className = `vault-msg ${type}`;
+            msg.innerText = text;
+            msg.style.display = 'block';
+        }
+    }
+
+    function renderMarkdown(md, targetEl) {
+        let html = md
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
+        html = html.replace(/^### (.*$)/gim, '<h3 style="color:var(--secondary); margin-top:20px;">$1</h3>');
+        html = html.replace(/^## (.*$)/gim, '<h2 style="color:var(--primary); margin-top:24px;">$1</h2>');
+        html = html.replace(/^# (.*$)/gim, '<h1 style="color:var(--primary); border-bottom:2px solid var(--border); padding-bottom:8px;">$1</h1>');
+        html = html.replace(/^---/gim, '<hr style="border:0; border-top:1px solid #cbd5e1; margin:20px 0;">');
+        html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
+        html = html.replace(/\*(.*?)\*/gim, '<em>$1</em>');
+        
+        // Blocos de código SQL e Java
+        html = html.replace(/```sql([\s\S]*?)```/gim, '<pre><code class="language-sql">$1</code></pre>');
+        html = html.replace(/```java([\s\S]*?)```/gim, '<pre><code class="language-java">$1</code></pre>');
+        html = html.replace(/`([^`]+)`/gim, '<code style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-family:monospace; color:#0f172a;">$1</code>');
+        html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');
+        html = html.replace(/<\/li>\s*<li>/gim, '</li><li>');
+        html = html.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>');
+        html = html.replace(/\n\n+/gim, '</p><p>');
+
+        targetEl.innerHTML = `<p>${html}</p>`;
+        if (window.Prism) {
+            Prism.highlightAllUnder(targetEl);
+        }
+    }
+
+</script>
+
+
+</body></html>
